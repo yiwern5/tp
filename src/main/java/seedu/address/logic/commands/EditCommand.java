@@ -8,6 +8,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_PHONE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
+import static seedu.address.model.Model.PREDICATE_SHOW_ALL_TASKS;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -32,6 +33,7 @@ import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.Phone;
 import seedu.address.model.tag.Tag;
+import seedu.address.model.task.Task;
 
 /**
  * Edits the details of an existing person in the address book.
@@ -60,6 +62,7 @@ public class EditCommand extends Command {
 
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
+    private Task editedTask;
 
     /**
      * @param index of the person in the filtered person list to edit
@@ -84,7 +87,12 @@ public class EditCommand extends Command {
 
         Person personToEdit = lastShownList.get(index.getZeroBased());
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
-
+        Task taskToEdit = personToEdit.getTask();
+        if (taskToEdit != null) {
+            editedTask = new Task(taskToEdit.getTaskTitle(), taskToEdit.getDeadline(), taskToEdit.isDone());
+            editedTask.setPersonInCharge(editedPerson);
+            editedPerson.setTask(editedTask);
+        }
 
         if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
             throw new CommandException(MESSAGE_DUPLICATE_PERSON);
@@ -92,6 +100,10 @@ public class EditCommand extends Command {
 
         model.setPerson(personToEdit, editedPerson);
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+        if (taskToEdit != null) {
+            model.setTask(taskToEdit, editedTask);
+            model.updateFilteredTaskList(PREDICATE_SHOW_ALL_TASKS);
+        }
         model.commitAddressBook();
         return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS, Messages.format(editedPerson)));
     }
@@ -110,7 +122,7 @@ public class EditCommand extends Command {
         Department updatedDepartment = editPersonDescriptor.getDepartment().orElse(personToEdit.getDepartment());
         Set<Tag> updatedTags = editPersonDescriptor.getTags().orElse(personToEdit.getTags());
         Efficiency updatedEfficiency = editPersonDescriptor.getEfficiency().orElse(personToEdit.getEfficiency());
-        Comment updatedComment = personToEdit.getComment();
+        Comment updatedComment = editPersonDescriptor.getComment().orElse(personToEdit.getComment());
         return new Person(updatedName, updatedPhone, updatedEmail, updatedAddress, updatedDepartment, updatedTags,
                 updatedEfficiency, updatedComment);
     }
@@ -151,6 +163,7 @@ public class EditCommand extends Command {
         private Department department;
         private Set<Tag> tags;
         private Efficiency efficiency;
+        private Comment comment;
 
         public EditPersonDescriptor() {}
 
@@ -165,6 +178,7 @@ public class EditCommand extends Command {
             setAddress(toCopy.address);
             setDepartment(toCopy.department);
             setTags(toCopy.tags);
+            setComment(toCopy.comment);
         }
 
         /**
@@ -237,6 +251,14 @@ public class EditCommand extends Command {
 
         public Optional<Efficiency> getEfficiency() {
             return Optional.ofNullable(efficiency);
+        }
+
+        public void setComment(Comment comment) {
+            this.comment = comment;
+        }
+
+        public Optional<Comment> getComment() {
+            return Optional.ofNullable(comment);
         }
 
         @Override

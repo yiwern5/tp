@@ -124,6 +124,7 @@ public class ModelManager implements Model {
     @Override
     public void addTask(Task task) {
         versionedAddressBook.addTask(task);
+        updateFilteredTaskList(PREDICATE_SHOW_ALL_TASKS);
     }
 
     @Override
@@ -221,7 +222,8 @@ public class ModelManager implements Model {
         ModelManager otherModelManager = (ModelManager) other;
         return versionedAddressBook.equals(otherModelManager.versionedAddressBook)
                 && userPrefs.equals(otherModelManager.userPrefs)
-                && filteredPersons.equals(otherModelManager.filteredPersons);
+                && filteredPersons.equals(otherModelManager.filteredPersons)
+                && filteredTasks.equals(otherModelManager.filteredTasks);
     }
 
 }
